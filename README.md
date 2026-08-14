@@ -1,207 +1,121 @@
 <div align="center">
-    
-[English](README.md) | [Chinese](README.zh.md)
 
-</div>
+[English](README.md) | [中文](README.zh.md)
 
-<div align="center">
+# ColdContract
 
-# ColdReasoner-F
+### L2 · Contract — the Verifiable-Contract Layer of the Cold Trust Protocol Stack
 
-**Formal Behavioral Verification · Minimal Prototype**
-
-</div>
-
-<div align="center">
-
-[![Status](https://img.shields.io/badge/Status-Concept--Prototype-orange)](https://github.com/cold-os/ColdReasoner-F)
+[![Status](https://img.shields.io/badge/Status-Pre--Alpha--Prototype-orange)](https://github.com/cold-os/ColdContract)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Field](https://img.shields.io/badge/Field-CSS%20%7C%20HCI-6f42c1.svg)](https://github.com/cold-os)
 [![Python](https://img.shields.io/badge/Python-blue.svg)](https://www.python.org/)
 [![Z3](https://img.shields.io/badge/Z3-4.16.0-green.svg)](https://github.com/Z3Prover/z3)
 
 </div>
 
-ColdReasoner-F is a minimized, refined implementation of the ColdReasoner runtime verification core. Centered on a file management scenario, it strips away abstract philosophical reasoning and returns to engineering fundamentals: **a functional, verifiable AI behavior and access control system built atop the Z3 constraint solver.**
-
-The system operates via a three-stage closed-loop mechanism of *Belief – Token – Action*. The AI reports its intent (Belief) to the CAGE gateway; upon validating legality, CAGE issues an access Token; the AI may only execute target scripts when holding a matching Token. Any deviation across the pipeline — illegal declared beliefs, token abuse, or unauthorized actions — will be captured and rejected by mathematical constraints encoded within ColdReasoner.
-
-> **⚠️ Design Positioning**
->
-> This project is a minimal conceptual prototype. Its core objective is to formally encode the "belief-action consistency" verification paradigm into decidable logical constraints via the Z3 constraint solver. It is not a full-fledged runtime system, contains no network communication modules or real-world privilege management logic, and is constructed solely to validate the engineering feasibility of the formal verification kernel.
+> **Layer:** L2 · Contract — Cold Trust Protocol Stack
+> **Research Question:** How can the terms of human–AI interaction be made formally checkable?
+> **Method:** Minimal Z3 encoding of the belief–token–action loop (decidable constraints).
+> **Status:** Pre-alpha prototype · not for production use.
+> **Related:** [ColdReasoner](https://github.com/cold-os/ColdReasoner) (L3) · [Cold Trust Protocol Stack](https://github.com/cold-os) · arXiv:2512.08740 · figshare:31696846
 
 ---
 
-## Core Design
+## 🧊 What It Is
+
+ColdContract is the minimal, refined encoding of the trust protocol's *terms*: it turns "what an agent may claim, and what it may do" into **decidable logical constraints** on top of the Z3 constraint solver. It strips away philosophical framing and returns to engineering fundamentals — a runnable, verifiable interaction-contract engine.
+
+The core mechanism is the **belief–token–action** closed loop: the AI reports its intent (belief) to the CAGE gateway; upon validation, CAGE issues an access token; the AI may only execute with a matching token. Any deviation — illegal belief, token abuse, unauthorized action — is captured and rejected by mathematical constraints.
+
+> **⚠️ Design positioning**
+> This is a minimal conceptual prototype. Its purpose is to encode the "belief–action consistency" verification paradigm as decidable logical constraints via Z3. It is not a full runtime system — it contains no network modules or real privilege management — and is constructed solely to validate the engineering feasibility of the contract kernel.
+
+## 🔍 Why It Matters
+
+- **Computational social science:** contracts are *formalized interaction norms* — machine-checkable terms make human–AI interaction auditable governance, and every verification decision is a data point for studying how interaction rules shape behavior.
+- **HCI:** legible, checkable interaction terms are a precondition of *informed* trust — the human can verify the rules the agent is bound by.
+- **AI governance:** authorization-by-contract — enforcement is encoded in advance, not improvised after the fact.
+
+## 🎯 Core Design
+
 ```mermaid
 flowchart LR
     subgraph Layer 1 [Belief Validation]
-        A[AI Reports Belief] --> B{CAGE: Belief Legal?}
-        B -->|Yes| C[Issue Access Token]
-        B -->|No| D[❌ Intercept Request]
+        A[AI reports belief] --> B{CAGE: belief legal?}
+        B -->|yes| C[Issue access token]
+        B -->|no| D[Intercept]
     end
-
     subgraph Layer 2 [Action Validation]
-        C --> E[AI Executes Script with Token]
-        E --> F{ColdReasoner: Action Matches Belief?}
-        F -->|Yes| G[✅ Execution Approved]
-        F -->|No| H[❌ Intercept Request]
+        C --> E[AI executes with token]
+        E --> F{ColdReasoner: action matches?}
+        F -->|yes| G[Approved]
+        F -->|no| H[Intercept]
     end
 ```
 
-### Scenario Definition
-The system abstracts a file system model with a closed set of formally defined actions and corresponding belief predicates:
+**Scenario** — a file-system model with a closed set of formally defined actions and belief predicates:
 
 | Type | Belief / Action | Status |
 |------|-----------------|--------|
-| Legal Beliefs | READ, WRITE | ✅ Allowed to report |
-| Illegal Beliefs | DELETE, MODIFY | ❌ Forbidden to report |
-| Legal Actions | READ, WRITE | ✅ Allowed (with temporal constraints) |
-| Conditional Action | DELETE | ⚠️ Allowed only if READ occurred before |
-| Illegal Action | MODIFY | ❌ Permanently forbidden |
+| Legal beliefs | READ, WRITE | ✅ Allowed to report |
+| Illegal beliefs | DELETE, MODIFY | ❌ Forbidden to report |
+| Legal actions | READ, WRITE | ✅ Allowed (with temporal constraints) |
+| Conditional action | DELETE | ⚠️ Only if a READ occurred before |
+| Illegal action | MODIFY | ❌ Permanently forbidden |
 
-### Formal Validation Rules
-**Rule 1: Belief Legality** – Only READ and WRITE are legal to report; DELETE and MODIFY as beliefs are permanently forbidden.
+**Validation rules:**
+1. **Belief legality** — only READ/WRITE are legal to report; DELETE/MODIFY are permanently forbidden as beliefs.
+2. **Belief–action mapping** (forward implication) — reporting READ permits READ or DELETE; reporting WRITE permits only WRITE.
+3. **Temporal constraints** — DELETE requires a prior READ in history; consecutive WRITEs are prohibited.
+4. **Token issuance** — a concrete token with permission scope is issued upon passing; tokens can be revoked.
 
-**Rule 2: Belief-Action Mapping** (forward implication) – Reporting READ allows either READ or DELETE actions; reporting WRITE allows only WRITE. No reverse implication is enforced (i.e., executing DELETE does not require reporting DELETE).
+## 🚀 Quick Start
 
-**Rule 3: Temporal Constraints** –
-- Executing DELETE requires at least one READ action in the history.
-- Consecutive WRITE actions are prohibited.
-
-**Rule 4: Token Issuance** – Upon successful verification, a concrete Token object with the corresponding permission scope is issued; tokens can be revoked later.
-
----
-
-## Quick Start
-### Prerequisites
-- Python 3.8 or newer
-- Z3 Solver
-
-### Installation & Execution
 ```bash
 pip install z3-solver
 python cold_reasoner_f.py
 ```
 
-### Sample Console Output
-```
-=== Runtime Incremental Verification ===
+`sat` = a valid belief–action combination satisfying all constraints exists; `unsat` = the trace violates a rule and is rejected by the contract.
 
---- Step 1: belief=READ, action=READ ---
-[EXEC] READ test.txt
-✅ Verification passed, token T-0 issued
+## 🔬 LLM Integration Test
 
---- Step 2: belief=WRITE, action=WRITE ---
-[EXEC] WRITE test.txt with 'new content'
-✅ Verification passed, token T-1 issued
+`llm_integration_demo.py` drives the core engine with **qwen-plus** (Alibaba Cloud Bailian), simulating an agent under formal constraints. Four scenarios, all currently passing:
 
---- Step 3: belief=READ, action=DELETE ---
-[EXEC] DELETE test.txt
-✅ Verification passed, token T-2 issued
+1. Belief–action mapping violation (READ → MODIFY) — intercepted ✅
+2. Temporal violation (DELETE without prior READ) — intercepted ✅
+3. Temporal violation (consecutive WRITE) — intercepted ✅
+4. Unstructured natural-language input — safely rejected ✅
 
---- Step 4: belief=WRITE, action=WRITE ---
-[EXEC] WRITE test.txt with 'new content'
-✅ Verification passed, token T-3 issued
+## 📜 AI Utilization Statement
 
---- Step 5: belief=READ, action=READ ---
-[EXEC] READ test.txt
-✅ Verification passed, token T-4 issued
-```
-
-### Result Semantics
-| Solver Output | Formal Meaning |
-|---------------|----------------|
-| `sat` | A valid combination of beliefs and actions exists that satisfies all encoded formal constraints |
-| `unsat` | The hypothesized execution trace violates at least one validation rule; the trace is rejected by CAGE/ColdReasoner |
-
----
-
-## Evolution: From Theoretical Paper to Engineering Implementation
-This prototype delivers an engineering-focused refinement of the original ColdReasoner theoretical framework:
-
-| Dimension | Previous Design (ColdReasoner) | This Implementation (ColdReasoner-F) |
-|-----------|-------------------------------|--------------------------------------|
-| Verification Layers | Three (belief legality / action consistency / approximate matching) | Static rules (belief legality + forward mapping) + temporal constraints |
-| Mapping Relation | Approximate (semantic distance) | One-to-many forward mapping (READ → READ/DELETE, WRITE → WRITE) |
-| Temporal Logic | Not covered | Supports history-based constraints (e.g., READ before DELETE) |
-| Token Mechanism | Implicit | Concrete Token objects (scope, revoked, etc.) |
-| Execution Hooks | None | Real pre‑defined scripts invoked upon success |
-| Philosophical Background | Includes Cold Existence Model, etc. | Completely stripped, pure engineering |
-
-The prototype retains ColdReasoner’s core thesis: **AI behavior regulated via external formal contractual constraints**, while formalizing the paradigm into runnable, verifiable, auditable mathematical logic.
-
----
-
-## Core Limitations
-### 1. Expressive Power of Formal Logic
-Currently only simple temporal constraints (finite rules based on history) are included; full LTL/CTL property verification is not yet supported, and modal logic is not covered.
-
-### 2. Restricted Application Domain
-The formal model is specialized exclusively for file system read/write/delete/modify workflows. Generalization to alternative agent domains (e.g., dialogue systems, autonomous LLM agents) requires full redefinition of belief spaces, action spaces, and cross-domain mapping rules.
-
-### 3. Deployment Constraints
-No OS-level privilege enforcement subsystems. This artifact serves solely as a conceptual verification prototype and is unsuitable for production-grade deployment.
-
----
-
-## LLM Integration Test
-
-In addition to the pure core verification engine (`cold_reasoner_f.py`), this project provides an integration demo file `llm_integration_demo.py`. This file invokes the core engine and interfaces with the **qwen-plus** model on Alibaba Cloud Bailian platform to simulate an AI agent's decision-making under formal constraints.
-
-Before running, set the environment variable `DASHSCOPE_API_KEY`, then execute:
-
-```bash
-pip install dashscope
-python llm_integration_demo.py
-```
-
-The test suite includes four independent scenarios:
-1. **Belief-action mapping violation** (READ → MODIFY is intercepted)
-2. **Temporal constraint violation** (DELETE without prior READ is intercepted)
-3. **Temporal constraint violation** (consecutive WRITE is intercepted)
-4. **Unstructured input robustness** (natural language input is safely rejected)
-
-All tests currently pass. Sample output (abridged):
-
-```
-[Test 1] Expected: intercept READ→MODIFY      → ✅ Intercepted
-[Test 2] Expected: intercept DELETE w/o READ  → ✅ Intercepted
-[Test 3] Expected: intercept consecutive WRITE → ✅ Intercepted
-[Test 4] Expected: reject natural language    → ✅ Safely failed
-```
-
-This integration demo fully validates the reliability of the ColdReasoner-F core in real-world LLM interaction scenarios, while keeping the core engine independent and clean.
-
----
-
-## AI Utilization Statement
 Source code implementation for this project was completed through collaborative work between human authors and AI auxiliary tools.
 
-**Human Author Contributions**:
+**Human Author Contributions:**
 - Core architectural design: closed-loop Belief-Token-Action pipeline
 - Formal logical definition of validation rules (two-layer verification, exact matching replacing approximate semantics)
 - Scenario abstraction and comprehensive test suite design
 
-**AI Auxiliary Contributions**:
+**AI Auxiliary Contributions:**
 - Source code implementation and debugging
 - Syntax standardization and formatting optimization
 - Automated test case generation
 
 Human authors bear full engineering responsibility for the correctness of the final source code artifact.
 
----
+## 🧪 Limitations & Roadmap
 
-## Tech Stack
-- **Constraint Solver**: Z3 4.16.0
-- **Programming Language**: Python 3.8+
+- **Expressive power:** currently only simple temporal constraints (no LTL/CTL, no modal logic).
+- **Scope:** file-system scenario only; other domains require redefining belief/action spaces and mappings.
+- **Deployment:** no OS-level privilege enforcement — conceptual verification prototype only.
 
----
+**Roadmap:** extend the rule set with temporal and dependency invariants; replace batch Z3 solving with an incremental runtime-monitoring engine; log decision traces to feed computational analysis of trust dynamics (CSS).
 
-## Future Extension Roadmap
-- Extend formal rule set with temporal constraints and inter-action dependency invariants
-- Replace standalone Z3 batch solving with a continuous runtime monitoring engine for incremental stream verification
+## 📄 License
 
----
-
-## License
 Apache 2.0
+
+---
+
+*Part of the [Cold Trust Protocol Stack](https://github.com/cold-os) — trust protocols for human–AI interaction, anchored in computational social science.*
