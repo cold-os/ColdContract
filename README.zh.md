@@ -14,10 +14,10 @@
 
 </div>
 
-> **层次：** L2 · 契约层 —— Cold Trust Protocol Stack
-> **研究问题：** 人机交互的条款，如何成为可被形式化检查的？
-> **方法：** 基于 Z3 约束求解器的"信念—令牌—行为"闭环的最小编码（可判定约束）
-> **状态：** Pre-alpha 原型 · 不适用于生产环境
+> **层次：** L2 · 契约层 —— Cold Trust Protocol Stack  
+> **研究问题：** 人机交互的条款，如何成为可被形式化检查的？  
+> **方法：** 基于 Z3 约束求解器的"信念—令牌—行为"闭环的最小编码（可判定约束）  
+> **状态：** Pre-alpha 原型 · 不适用于生产环境  
 > **关联：** [ColdReasoner](https://github.com/cold-os/ColdReasoner)（L3）· [Cold Trust Protocol Stack](https://github.com/cold-os) · arXiv:2512.08740 · figshare:31696846
 
 ---
