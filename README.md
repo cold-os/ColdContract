@@ -14,10 +14,10 @@
 
 </div>
 
-> **Layer:** L2 · Contract — Cold Trust Protocol Stack
-> **Research Question:** How can the terms of human–AI interaction be made formally checkable?
-> **Method:** Minimal Z3 encoding of the belief–token–action loop (decidable constraints).
-> **Status:** Pre-alpha prototype · not for production use.
+> **Layer:** L2 · Contract — Cold Trust Protocol Stack  
+> **Research Question:** How can the terms of human–AI interaction be made formally checkable?  
+> **Method:** Minimal Z3 encoding of the belief–token–action loop (decidable constraints).  
+> **Status:** Pre-alpha prototype · not for production use.  
 > **Related:** [ColdReasoner](https://github.com/cold-os/ColdReasoner) (L3) · [Cold Trust Protocol Stack](https://github.com/cold-os) · arXiv:2512.08740 · figshare:31696846
 
 ---
